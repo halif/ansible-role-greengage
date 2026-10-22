@@ -60,3 +60,27 @@
       ansible.builtin.assert:
         that:
           - gpadmin_user.stdout == 'gpadmin'
+
+    - name: Check Greengage psql version
+      ansible.builtin.command:
+        argv:
+          - /opt/greengagedb/greengage6/bin/psql
+          - --version
+      register: greengage_psql_version
+      changed_when: false
+
+    - name: Verify Greengage psql version output
+      ansible.builtin.assert:
+        that:
+          - greengage_psql_version.rc == 0
+          - "'psql' in greengage_psql_version.stdout"
+
+    - name: Gather user facts
+      ansible.builtin.getent:
+        database: passwd
+        key: gpadmin
+
+    - name: Verify gpadmin home directory
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.getent_passwd.gpadmin[4] == '/home/gpadmin'
