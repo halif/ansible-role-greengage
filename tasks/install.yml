@@ -1,0 +1,7 @@
+---
+- name: Install Greengage DB package
+  ansible.builtin.apt:
+    name: "{{ greengage_package_name }}"
+    state: present
+    update_cache: true
+  become: true

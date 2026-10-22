@@ -1,0 +1,23 @@
+---
+greengage_version: "6"
+greengage_package_name: greengage6
+
+greengage_apt_repository: >-
+  deb [signed-by=/etc/apt/keyrings/greengagedb.gpg]
+  https://greengagedb.org/repositories/ubuntu/22.04/x86_64
+  greengagedb main
+
+greengage_apt_key_url: https://greengagedb.org/repositories/gpg
+greengage_apt_keyring: /etc/apt/keyrings/greengagedb.gpg
+greengage_apt_repository_file: /etc/apt/sources.list.d/greengagedb.list
+
+greengage_apt_update_cache: true
+
+greengage_manage_gpadmin: true
+greengage_gpadmin_user: gpadmin
+greengage_gpadmin_group: gpadmin
+greengage_gpadmin_home: /home/gpadmin
+
+greengage_manage_environment: true
+greengage_environment_file: /home/gpadmin/.bashrc
+greengage_path_script: /opt/greengagedb/greengage6/greengage_path.sh

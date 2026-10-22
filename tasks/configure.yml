@@ -1,0 +1,37 @@
+---
+- name: Create gpadmin group
+  ansible.builtin.group:
+    name: "{{ greengage_gpadmin_group }}"
+    state: present
+  become: true
+  when: greengage_manage_gpadmin
+
+- name: Create gpadmin user
+  ansible.builtin.user:
+    name: "{{ greengage_gpadmin_user }}"
+    group: "{{ greengage_gpadmin_group }}"
+    home: "{{ greengage_gpadmin_home }}"
+    create_home: true
+    shell: /bin/bash
+    state: present
+  become: true
+  when: greengage_manage_gpadmin
+
+- name: Check Greengage environment script
+  ansible.builtin.stat:
+    path: "{{ greengage_path_script }}"
+  register: greengage_path_stat
+
+- name: Configure Greengage environment for gpadmin
+  ansible.builtin.lineinfile:
+    path: "{{ greengage_environment_file }}"
+    line: "source {{ greengage_path_script }}"
+    state: present
+    create: true
+    owner: "{{ greengage_gpadmin_user }}"
+    group: "{{ greengage_gpadmin_group }}"
+    mode: "0644"
+  become: true
+  when:
+    - greengage_path_stat.stat.exists
+    - greengage_manage_gpadmin

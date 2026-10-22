@@ -1,0 +1,20 @@
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution == "Ubuntu"
+      - ansible_facts.distribution_version == "22.04"
+    fail_msg: "This role currently supports Ubuntu 22.04 only."
+
+- name: Install prerequisites
+  ansible.builtin.import_tasks: prerequisites.yml
+
+- name: Configure Greengage APT repository
+  ansible.builtin.import_tasks: repository.yml
+
+- name: Install Greengage DB
+  ansible.builtin.import_tasks: install.yml
+
+- name: Configure Greengage environment
+  ansible.builtin.import_tasks: configure.yml
+  when: greengage_manage_environment

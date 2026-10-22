@@ -1,0 +1,37 @@
+---
+- name: Download Greengage repository signing key
+  ansible.builtin.get_url:
+    url: "{{ greengage_apt_key_url }}"
+    dest: /tmp/greengagedb.asc
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Convert Greengage signing key to keyring
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --dearmor
+      - --yes
+      - --output
+      - "{{ greengage_apt_keyring }}"
+      - /tmp/greengagedb.asc
+    creates: "{{ greengage_apt_keyring }}"
+  become: true
+
+- name: Set permissions on Greengage keyring
+  ansible.builtin.file:
+    path: "{{ greengage_apt_keyring }}"
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Configure Greengage APT repository
+  ansible.builtin.apt_repository:
+    repo: "{{ greengage_apt_repository }}"
+    filename: greengagedb
+    state: present
+    update_cache: true
+  become: true
