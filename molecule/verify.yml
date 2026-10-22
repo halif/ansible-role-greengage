@@ -1,0 +1,62 @@
+---
+- name: Verify Greengage DB installation
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Verify Greengage DB package
+      ansible.builtin.assert:
+        that:
+          - "'greengage6' in ansible_facts.packages"
+        fail_msg: "Greengage DB package greengage6 is not installed"
+
+    - name: Check Greengage installation directory
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6
+      register: greengage_install_dir
+
+    - name: Verify Greengage installation directory
+      ansible.builtin.assert:
+        that:
+          - greengage_install_dir.stat.exists
+          - greengage_install_dir.stat.isdir
+
+    - name: Check Greengage executable
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/psql
+      register: greengage_psql
+
+    - name: Verify Greengage executable
+      ansible.builtin.assert:
+        that:
+          - greengage_psql.stat.exists
+          - greengage_psql.stat.executable
+
+    - name: Check Greengage environment script
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/greengage_path.sh
+      register: greengage_environment_script
+
+    - name: Verify Greengage environment script
+      ansible.builtin.assert:
+        that:
+          - greengage_environment_script.stat.exists
+          - greengage_environment_script.stat.isreg
+
+    - name: Check gpadmin account
+      ansible.builtin.command:
+        argv:
+          - id
+          - -un
+          - gpadmin
+      register: gpadmin_user
+      changed_when: false
+
+    - name: Verify gpadmin account
+      ansible.builtin.assert:
+        that:
+          - gpadmin_user.stdout == 'gpadmin'

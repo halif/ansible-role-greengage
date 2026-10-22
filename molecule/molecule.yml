@@ -1,0 +1,27 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: greengage-ubuntu2204
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    command: ""
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      greengage-ubuntu2204:
+        ansible_user: root
+        ansible_become: false
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      remote_tmp: /tmp
+
+verifier:
+  name: ansible
