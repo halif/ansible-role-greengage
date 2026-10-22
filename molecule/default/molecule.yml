@@ -9,7 +9,10 @@ platforms:
   - name: greengage-ubuntu2204
     image: geerlingguy/docker-ubuntu2204-ansible:latest
     pre_build_image: true
-    command: ""
+    privileged: true
+    command: /bin/bash -c "while true; do sleep 3600; done"
+    docker_networks:
+      - name: molecule
 
 provisioner:
   name: ansible
