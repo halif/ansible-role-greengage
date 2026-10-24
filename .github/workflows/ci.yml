@@ -62,6 +62,12 @@ jobs:
           mkdir -p ~/.ansible/roles/halif
           ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
 
+      - name: Show Molecule version and options
+        run: |
+          molecule --version
+          molecule --help
+          molecule test --help
+
       - name: Run Molecule
         run: molecule test
 
