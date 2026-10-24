@@ -5,7 +5,9 @@ on:
   push:
     branches:
       - "**"
+
   pull_request:
+
   workflow_dispatch:
 
 permissions:
@@ -36,7 +38,6 @@ jobs:
       - name: Run ansible-lint
         run: ansible-lint
 
-
   molecule:
     name: Molecule - Ubuntu 22.04
     runs-on: ubuntu-22.04
@@ -62,13 +63,10 @@ jobs:
           mkdir -p ~/.ansible/roles/halif
           ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
 
-      - name: Show Molecule version and options
-        run: |
-          molecule --version
-          molecule --help
-          molecule test --help
+      - name: Show Molecule version
+        run: molecule --version
 
-      - name: Run Molecule
+      - name: Run default Molecule scenario
         run: molecule test
 
   cluster-config:
@@ -96,5 +94,8 @@ jobs:
           mkdir -p ~/.ansible/roles/halif
           ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
 
-      - name: Test cluster configuration scenario
-        run: molecule --scenario-name cluster_config test
+      - name: Show Molecule version
+        run: molecule --version
+
+      - name: Run cluster configuration scenario
+        run: molecule test --scenario cluster_config
