@@ -1,5 +1,11 @@
 # Ansible Role: Greengage DB
 
+[![Tested with Molecule](https://img.shields.io/badge/tested%20with-Molecule-2ea44f?logo=ansible&logoColor=white)](https://ansible.readthedocs.io/projects/molecule/)
+[![Linted with ansible-lint](https://img.shields.io/badge/linted%20with-ansible--lint-1a1918?logo=ansible&logoColor=white)](https://ansible.readthedocs.io/projects/lint/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ansible Galaxy](https://img.shields.io/badge/halif.greengage-blue?logo=ansible&logoColor=white)](https://galaxy.ansible.com/ui/standalone/roles/halif/greengage/)
+
+
 Ansible role for installing and configuring Greengage DB on Ubuntu 22.04.
 
 ## Requirements
