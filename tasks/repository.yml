@@ -31,7 +31,7 @@
 - name: Configure Greengage APT repository
   ansible.builtin.apt_repository:
     repo: "{{ greengage_apt_repository }}"
-    filename: greengagedb
+    filename: "{{ greengage_apt_repository_filename }}"
     state: present
     update_cache: true
   become: true
