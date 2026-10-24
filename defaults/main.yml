@@ -28,3 +28,10 @@ greengage_manage_data_directory: true
 greengage_data_directory_owner: "{{ greengage_gpadmin_user }}"
 greengage_data_directory_group: "{{ greengage_gpadmin_group }}"
 greengage_data_directory_mode: "0700"
+
+# Greengage cluster initialization
+greengage_manage_cluster_initialization: false
+greengage_cluster_name: "greengage"
+greengage_master_data_directory: "/data/greengage/master"
+greengage_segment_data_directory: "/data/greengage/primary"
+greengage_mirror_data_directory: "/data/greengage/mirror"
