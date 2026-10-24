@@ -6,9 +6,19 @@ galaxy_info:
   description: Install and configure Greengage DB on Ubuntu 22.04.
   license: MIT
   min_ansible_version: "2.14"
+
   platforms:
     - name: Ubuntu
       versions:
         - jammy
+
+  galaxy_tags:
+    - database
+    - greengage
+    - postgres
+    - postgresql
+    - ubuntu
+    - installation
+    - configuration
 
 dependencies: []
