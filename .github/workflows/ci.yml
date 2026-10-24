@@ -61,6 +61,9 @@ jobs:
       - name: Install Ansible collections
         run: |
           ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.library_inventory_filtering.git,1.1.5
+
+          ansible-galaxy collection install \
             git+https://github.com/ansible-collections/community.docker.git,5.4.0
 
           ansible-galaxy collection install \
@@ -99,6 +102,9 @@ jobs:
 
       - name: Install Ansible collections
         run: |
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.library_inventory_filtering.git,1.1.5
+
           ansible-galaxy collection install \
             git+https://github.com/ansible-collections/community.docker.git,5.4.0
 
