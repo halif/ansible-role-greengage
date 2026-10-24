@@ -11,8 +11,8 @@
     - name: Verify Greengage DB package
       ansible.builtin.assert:
         that:
-          - "'greengange6' in ansible_facts.packages"
-        fail_msg: "Greengage DB package greengange6 is not installed"
+          - "'greengage6' in ansible_facts.packages"
+        fail_msg: "Greengage DB package greengage6 is not installed"
 
     - name: Check Greengage installation directory
       ansible.builtin.stat:
