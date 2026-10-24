@@ -108,3 +108,17 @@
           - greengage_gpstate.stat.exists
           - greengage_gpstate.stat.executable
         fail_msg: "Greengage cluster status utility is missing or not executable"
+
+    - name: Check Greengage data directory
+      ansible.builtin.stat:
+        path: /data/greengage
+      register: greengage_data_dir
+
+    - name: Verify Greengage data directory
+      ansible.builtin.assert:
+        that:
+          - greengage_data_dir.stat.exists
+          - greengage_data_dir.stat.isdir
+          - greengage_data_dir.stat.pw_name == 'gpadmin'
+          - greengage_data_dir.stat.gr_name == 'gpadmin'
+          - greengage_data_dir.stat.mode == '0700'

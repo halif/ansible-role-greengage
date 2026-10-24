@@ -21,3 +21,10 @@ greengage_gpadmin_home: /home/gpadmin
 greengage_manage_environment: true
 greengage_environment_file: /home/gpadmin/.bashrc
 greengage_path_script: /opt/greengagedb/greengage6/greengage_path.sh
+
+# Greengage data directory
+greengage_data_directory: /data/greengage
+greengage_manage_data_directory: true
+greengage_data_directory_owner: "{{ greengage_gpadmin_user }}"
+greengage_data_directory_group: "{{ greengage_gpadmin_group }}"
+greengage_data_directory_mode: "0700"
