@@ -1,10 +1,19 @@
 ---
-- name: Create Greengage data directory
+- name: Create Greengage data directories
   ansible.builtin.file:
-    path: "{{ greengage_data_directory }}"
+    path: "{{ item.path }}"
     state: directory
     owner: "{{ greengage_data_directory_owner }}"
     group: "{{ greengage_data_directory_group }}"
-    mode: "{{ greengage_data_directory_mode }}"
+    mode: "{{ item.mode }}"
   become: true
+  loop:
+    - path: "{{ greengage_data_directory }}"
+      mode: "{{ greengage_data_directory_mode }}"
+    - path: "{{ greengage_master_data_directory }}"
+      mode: "0700"
+    - path: "{{ greengage_segment_data_directory }}"
+      mode: "0700"
+    - path: "{{ greengage_mirror_data_directory }}"
+      mode: "0700"
   when: greengage_manage_data_directory

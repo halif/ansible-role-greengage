@@ -122,3 +122,22 @@
           - greengage_data_dir.stat.pw_name == 'gpadmin'
           - greengage_data_dir.stat.gr_name == 'gpadmin'
           - greengage_data_dir.stat.mode == '0700'
+
+    - name: Check Greengage cluster data directories
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /data/greengage/master
+        - /data/greengage/primary
+        - /data/greengage/mirror
+      register: greengage_cluster_dirs
+
+    - name: Verify Greengage cluster data directories
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isdir
+          - item.stat.pw_name == 'gpadmin'
+          - item.stat.gr_name == 'gpadmin'
+          - item.stat.mode == '0700'
+      loop: "{{ greengage_cluster_dirs.results }}"
