@@ -83,4 +83,4 @@
     - name: Verify gpadmin home directory
       ansible.builtin.assert:
         that:
-          - ansible_facts.getent_passwd.gpadmin[4] == '/home/gpadmin'
+          - ansible_facts.getent_passwd.gpadmin[5] == '/home/gpadmin'
