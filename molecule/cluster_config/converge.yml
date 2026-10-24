@@ -1,0 +1,10 @@
+---
+- name: Configure Greengage cluster initialization settings
+  hosts: all
+  become: true
+
+  vars:
+    greengage_manage_cluster_initialization: true
+
+  roles:
+    - role: halif.greengage

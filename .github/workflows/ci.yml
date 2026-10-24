@@ -4,7 +4,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - "**"
   pull_request:
   workflow_dispatch:
 
@@ -36,6 +36,7 @@ jobs:
       - name: Run ansible-lint
         run: ansible-lint
 
+
   molecule:
     name: Molecule - Ubuntu 22.04
     runs-on: ubuntu-22.04
@@ -61,8 +62,33 @@ jobs:
           mkdir -p ~/.ansible/roles/halif
           ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
 
-      - name: Run Molecule with debug
-        env:
-          ANSIBLE_VERBOSITY: "4"
-          ANSIBLE_DEBUG: "1"
-        run: molecule --debug converge
+      - name: Run Molecule
+        run: molecule test
+
+  cluster-config:
+    name: Molecule - Cluster configuration
+    runs-on: ubuntu-22.04
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Molecule
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core molecule
+          pip install "molecule-plugins[docker]"
+
+      - name: Make role available to Ansible
+        run: |
+          mkdir -p ~/.ansible/roles/halif
+          ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
+
+      - name: Test cluster configuration scenario
+        run: molecule -s cluster_config test
