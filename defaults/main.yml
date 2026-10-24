@@ -10,6 +10,7 @@ greengage_apt_repository: >-
 greengage_apt_key_url: https://greengagedb.org/repositories/gpg
 greengage_apt_keyring: /etc/apt/keyrings/greengagedb.gpg
 greengage_apt_repository_file: /etc/apt/sources.list.d/greengagedb.list
+greengage_apt_repository_filename: greengagedb
 
 greengage_apt_update_cache: true
 
