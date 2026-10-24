@@ -60,8 +60,11 @@ jobs:
 
       - name: Install Ansible collections
         run: |
-          ansible-galaxy collection install community.docker
-          ansible-galaxy collection install ansible.posix
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.docker.git,5.4.0
+
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/ansible.posix.git,2.0.0
 
       - name: Make role available to Ansible
         run: |
@@ -96,8 +99,11 @@ jobs:
 
       - name: Install Ansible collections
         run: |
-          ansible-galaxy collection install community.docker
-          ansible-galaxy collection install ansible.posix
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.docker.git,5.4.0
+
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/ansible.posix.git,2.0.0
 
       - name: Make role available to Ansible
         run: |
