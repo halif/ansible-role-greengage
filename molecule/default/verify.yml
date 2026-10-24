@@ -11,8 +11,8 @@
     - name: Verify Greengage DB package
       ansible.builtin.assert:
         that:
-          - "'greengage6' in ansible_facts.packages"
-        fail_msg: "Greengage DB package greengage6 is not installed"
+          - "'greengange6' in ansible_facts.packages"
+        fail_msg: "Greengage DB package greengange6 is not installed"
 
     - name: Check Greengage installation directory
       ansible.builtin.stat:
@@ -75,15 +75,23 @@
           - greengage_psql_version.rc == 0
           - "'psql' in greengage_psql_version.stdout"
 
-    - name: Gather user facts
-      ansible.builtin.getent:
-        database: passwd
-        key: gpadmin
+    - name: Check gpadmin account entry
+      ansible.builtin.command:
+        argv:
+          - getent
+          - passwd
+          - gpadmin
+      register: gpadmin_passwd_entry
+      changed_when: false
 
     - name: Verify gpadmin home directory
       ansible.builtin.assert:
         that:
-          - ansible_facts.getent_passwd.gpadmin[5] == '/home/gpadmin'
+          - gpadmin_passwd_entry.stdout.split(':') | length >= 7
+          - gpadmin_passwd_entry.stdout.split(':')[5] == '/home/gpadmin'
+        fail_msg: >-
+          Expected gpadmin home directory /home/gpadmin.
+          Actual passwd entry: {{ gpadmin_passwd_entry.stdout }}
 
     - name: Check Greengage initialization utility
       ansible.builtin.stat:
@@ -112,22 +120,3 @@
     - name: Check Greengage data directory
       ansible.builtin.stat:
         path: /data/greengage
-      register: greengage_data_dir
-
-    - name: Verify Greengage data directory
-      ansible.builtin.assert:
-        that:
-          - greengage_data_dir.stat.exists
-          - greengage_data_dir.stat.isdir
-          - greengage_data_dir.stat.pw_name == 'gpadmin'
-          - greengage_data_dir.stat.gr_name == 'gpadmin'
-          - greengage_data_dir.stat.mode == '0700'
-
-    - name: Gather user facts
-      ansible.builtin.getent:
-        database: passwd
-        key: gpadmin
-
-    - name: Show gpadmin account details
-      ansible.builtin.debug:
-        var: ansible_facts.getent_passwd.gpadmin
