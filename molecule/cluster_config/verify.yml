@@ -1,0 +1,31 @@
+---
+- name: Verify Greengage cluster configuration
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Check gpinitsystem configuration
+      ansible.builtin.stat:
+        path: /home/gpadmin/gpinitsystem_config
+      register: gpinitsystem_config
+
+    - name: Verify gpinitsystem configuration file
+      ansible.builtin.assert:
+        that:
+          - gpinitsystem_config.stat.exists
+          - gpinitsystem_config.stat.isreg
+          - gpinitsystem_config.stat.pw_name == 'gpadmin'
+          - gpinitsystem_config.stat.gr_name == 'gpadmin'
+          - gpinitsystem_config.stat.mode == '0600'
+
+    - name: Read gpinitsystem configuration
+      ansible.builtin.slurp:
+        src: /home/gpadmin/gpinitsystem_config
+      register: gpinitsystem_config_content
+
+    - name: Verify master configuration
+      ansible.builtin.assert:
+        that:
+          - "'MASTER_PORT=5432' in (gpinitsystem_config_content.content | b64decode)"
+          - "'MASTER_DIRECTORY=\"/data/greengage/master\"' in (gpinitsystem_config_content.content | b64decode)"
+          - "'ARRAY_NAME=\"greengage\"' in (gpinitsystem_config_content.content | b64decode)"

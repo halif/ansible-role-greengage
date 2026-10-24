@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: greengage-cluster-config
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /bin/bash -c "while true; do sleep 3600; done"
+    docker_networks:
+      - name: molecule
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      greengage-cluster-config:
+        ansible_user: root
+        ansible_become: false
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      remote_tmp: /tmp
+
+verifier:
+  name: ansible
