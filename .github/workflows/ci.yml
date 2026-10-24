@@ -91,4 +91,4 @@ jobs:
           ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
 
       - name: Test cluster configuration scenario
-        run: molecule -s cluster_config test
+        run: molecule --scenario-name cluster_config test
