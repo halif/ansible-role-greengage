@@ -98,4 +98,4 @@ jobs:
         run: molecule --version
 
       - name: Run cluster configuration scenario
-        run: molecule test --scenario cluster_config
+        run: molecule test --scenario-name cluster_config
