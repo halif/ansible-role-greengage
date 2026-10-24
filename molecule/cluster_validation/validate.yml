@@ -1,0 +1,13 @@
+﻿---
+- name: Validate Greengage cluster parameters
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    greengage_segment_count: 1
+    greengage_replication_mode: mirrorless
+
+  tasks:
+    - name: Validate Greengage cluster configuration
+      ansible.builtin.import_tasks: ../../tasks/validate_cluster_config.yml

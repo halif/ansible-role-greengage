@@ -1,4 +1,7 @@
 ---
+- name: Validate Greengage cluster configuration
+  ansible.builtin.import_tasks: validate_cluster_config.yml
+
 - name: Create Greengage initialization configuration
   ansible.builtin.template:
     src: gpinitsystem_config.j2
