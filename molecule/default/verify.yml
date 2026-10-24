@@ -1,63 +1,132 @@
 ---
-- name: Verify Greengage cluster configuration
+- name: Verify Greengage DB installation
   hosts: all
   become: true
 
   tasks:
-    - name: Check gpinitsystem configuration
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Verify Greengage DB package
+      ansible.builtin.assert:
+        that:
+          - "'greengage6' in ansible_facts.packages"
+        fail_msg: "Greengage DB package greengage6 is not installed"
+
+    - name: Check Greengage installation directory
       ansible.builtin.stat:
-        path: /home/gpadmin/gpinitsystem_config
-      register: gpinitsystem_config
+        path: /opt/greengagedb/greengage6
+      register: greengage_install_dir
 
-    - name: Verify gpinitsystem configuration file
+    - name: Verify Greengage installation directory
       ansible.builtin.assert:
         that:
-          - gpinitsystem_config.stat.exists
-          - gpinitsystem_config.stat.isreg
-          - gpinitsystem_config.stat.pw_name == 'gpadmin'
-          - gpinitsystem_config.stat.gr_name == 'gpadmin'
-          - gpinitsystem_config.stat.mode == '0600'
+          - greengage_install_dir.stat.exists
+          - greengage_install_dir.stat.isdir
+
+    - name: Check Greengage executable
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/psql
+      register: greengage_psql
+
+    - name: Verify Greengage executable
+      ansible.builtin.assert:
+        that:
+          - greengage_psql.stat.exists
+          - greengage_psql.stat.executable
+
+    - name: Check Greengage environment script
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/greengage_path.sh
+      register: greengage_environment_script
+
+    - name: Verify Greengage environment script
+      ansible.builtin.assert:
+        that:
+          - greengage_environment_script.stat.exists
+          - greengage_environment_script.stat.isreg
+
+    - name: Check gpadmin account
+      ansible.builtin.command:
+        argv:
+          - id
+          - -un
+          - gpadmin
+      register: gpadmin_user
+      changed_when: false
+
+    - name: Verify gpadmin account
+      ansible.builtin.assert:
+        that:
+          - gpadmin_user.stdout == 'gpadmin'
+
+    - name: Check Greengage psql version
+      ansible.builtin.command:
+        argv:
+          - /opt/greengagedb/greengage6/bin/psql
+          - --version
+      register: greengage_psql_version
+      changed_when: false
+
+    - name: Verify Greengage psql version output
+      ansible.builtin.assert:
+        that:
+          - greengage_psql_version.rc == 0
+          - "'psql' in greengage_psql_version.stdout"
+
+    - name: Check gpadmin account entry
+      ansible.builtin.command:
+        argv:
+          - getent
+          - passwd
+          - gpadmin
+      register: gpadmin_passwd_entry
+      changed_when: false
+
+    - name: Verify gpadmin home directory
+      ansible.builtin.assert:
+        that:
+          - gpadmin_passwd_entry.stdout.split(':') | length >= 7
+          - gpadmin_passwd_entry.stdout.split(':')[5] == '/home/gpadmin'
         fail_msg: >-
-          The gpinitsystem configuration file is missing or has
-          incorrect ownership or permissions.
+          Expected gpadmin home directory /home/gpadmin.
+          Actual passwd entry: {{ gpadmin_passwd_entry.stdout }}
 
-    - name: Read gpinitsystem configuration
-      ansible.builtin.slurp:
-        src: /home/gpadmin/gpinitsystem_config
-      register: gpinitsystem_config_content
+    - name: Check Greengage initialization utility
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/gpinitsystem
+      register: greengage_gpinitsystem
 
-    - name: Decode gpinitsystem configuration
-      ansible.builtin.set_fact:
-        gpinitsystem_config_text: >-
-          {{ gpinitsystem_config_content.content | b64decode }}
-
-    - name: Verify cluster name and master settings
+    - name: Verify Greengage initialization utility
       ansible.builtin.assert:
         that:
-          - "'ARRAY_NAME=\"greengage\"' in gpinitsystem_config_text"
-          - >-
-            ('MASTER_HOSTNAME="' ~ ansible_facts.hostname ~ '"')
-            in gpinitsystem_config_text
-          - >-
-            'MASTER_DIRECTORY="/data/greengage/master"'
-            in gpinitsystem_config_text
-          - "'MASTER_PORT=5432' in gpinitsystem_config_text"
-        fail_msg: "Greengage cluster or master settings are incorrect."
+          - greengage_gpinitsystem.stat.exists
+          - greengage_gpinitsystem.stat.executable
+        fail_msg: "Greengage initialization utility is missing or not executable"
 
-    - name: Verify segment settings
+    - name: Check Greengage cluster status utility
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/gpstate
+      register: greengage_gpstate
+
+    - name: Verify Greengage cluster status utility
       ansible.builtin.assert:
         that:
-          - "'SEG_PREFIX=gpseg' in gpinitsystem_config_text"
-          - "'PORT_BASE=10000' in gpinitsystem_config_text"
-          - >-
-            'declare -a DATA_DIRECTORY=( /data/greengage/primary )'
-            in gpinitsystem_config_text
-        fail_msg: "Greengage segment settings are incorrect."
+          - greengage_gpstate.stat.exists
+          - greengage_gpstate.stat.executable
+        fail_msg: "Greengage cluster status utility is missing or not executable"
 
-    - name: Verify initialization settings
+    - name: Check Greengage data directory
+      ansible.builtin.stat:
+        path: /data/greengage
+      register: greengage_data_dir
+
+    - name: Verify Greengage data directory
       ansible.builtin.assert:
         that:
-          - "'TRUSTED_SHELL=ssh' in gpinitsystem_config_text"
-          - "'CHECK_POINT_SEGMENTS=8' in gpinitsystem_config_text"
-          - "'ENCODING=UNICODE' in gpinitsystem_config_text"
-        fail_msg: "Greengage initialization settings are incorrect."
+          - greengage_data_dir.stat.exists
+          - greengage_data_dir.stat.isdir
+          - greengage_data_dir.stat.pw_name == 'gpadmin'
+          - greengage_data_dir.stat.gr_name == 'gpadmin'
+        fail_msg: "Greengage data directory is missing or has incorrect ownership"
