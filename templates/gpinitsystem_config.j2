@@ -1,0 +1,11 @@
+ARRAY_NAME="{{ greengage_cluster_name }}"
+SEG_PREFIX=gpseg
+PORT_BASE=10000
+declare -a DATA_DIRECTORY=( {{ greengage_segment_data_directory }} )
+MASTER_HOSTNAME="{{ greengage_master_hostname }}"
+MASTER_DIRECTORY="{{ greengage_master_data_directory }}"
+MASTER_PORT={{ greengage_master_port }}
+TRUSTED_SHELL=ssh
+CHECK_POINT_SEGMENTS=8
+ENCODING=UNICODE
+

@@ -21,3 +21,7 @@
 
 - name: Prepare Greengage data directory
   ansible.builtin.import_tasks: data_directory.yml
+
+- name: Configure Greengage cluster initialization
+  ansible.builtin.import_tasks: cluster_config.yml
+  when: greengage_manage_cluster_initialization
