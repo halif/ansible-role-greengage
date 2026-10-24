@@ -1,15 +1,6 @@
 ---
 - name: Validate Greengage cluster configuration
-  ansible.builtin.assert:
-    that:
-      - greengage_segment_count | int == 1
-      - greengage_replication_mode == "mirrorless"
-    fail_msg: >-
-      This role currently supports one primary segment without mirrors.
-      Set greengage_segment_count to 1 and
-      greengage_replication_mode to mirrorless.
-    success_msg: Greengage cluster configuration is valid.
-  when: greengage_manage_cluster_initialization
+  ansible.builtin.import_tasks: validate_cluster_config.yml
 
 - name: Create Greengage initialization configuration
   ansible.builtin.template:
