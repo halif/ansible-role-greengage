@@ -84,3 +84,27 @@
       ansible.builtin.assert:
         that:
           - ansible_facts.getent_passwd.gpadmin[5] == '/home/gpadmin'
+
+    - name: Check Greengage initialization utility
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/gpinitsystem
+      register: greengage_gpinitsystem
+
+    - name: Verify Greengage initialization utility
+      ansible.builtin.assert:
+        that:
+          - greengage_gpinitsystem.stat.exists
+          - greengage_gpinitsystem.stat.executable
+        fail_msg: "Greengage initialization utility is missing or not executable"
+
+    - name: Check Greengage cluster status utility
+      ansible.builtin.stat:
+        path: /opt/greengagedb/greengage6/bin/gpstate
+      register: greengage_gpstate
+
+    - name: Verify Greengage cluster status utility
+      ansible.builtin.assert:
+        that:
+          - greengage_gpstate.stat.exists
+          - greengage_gpstate.stat.executable
+        fail_msg: "Greengage cluster status utility is missing or not executable"
