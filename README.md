@@ -5,7 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ansible Galaxy](https://img.shields.io/badge/halif.greengage-blue?logo=ansible&logoColor=white)](https://galaxy.ansible.com/ui/standalone/roles/halif/greengage/)
 
-
 Ansible role for installing and configuring Greengage DB on Ubuntu 22.04.
 
 ## Requirements
@@ -20,13 +19,19 @@ The role performs the following tasks:
 
 - Installs the required APT prerequisites.
 - Configures the Greengage DB APT repository and signing key.
-- Installs the `greengage6` package.
+- Installs the configured Greengage DB package.
 - Creates the `gpadmin` group and user when enabled.
 - Configures the Greengage environment for `gpadmin`.
 - Creates the configured Greengage data directories.
 - Optionally generates a `gpinitsystem_config` file for cluster initialization.
 
-**Important:** Generating the cluster configuration does not initialize or start a Greengage cluster. Cluster initialization and SQL connectivity are not currently tested by this role.
+**Cluster configuration limitations:**
+
+- The current cluster configuration supports one primary segment without mirrors.
+- Unsupported segment counts or replication modes are rejected by validation.
+- Cluster initialization is disabled by default.
+- Generating `gpinitsystem_config` does not initialize or start a cluster.
+- Actual cluster initialization, mirror configuration, and SQL connectivity are outside the current test coverage.
 
 ## Installation
 
