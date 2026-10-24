@@ -131,4 +131,3 @@
     - name: Show gpadmin account details
       ansible.builtin.debug:
         var: ansible_facts.getent_passwd.gpadmin
-
