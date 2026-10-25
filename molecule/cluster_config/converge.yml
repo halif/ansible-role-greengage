@@ -38,6 +38,7 @@
   gather_facts: true
 
   vars:
+    greengage_manage_cluster_initialization: true
     greengage_cluster_enabled: true
     greengage_cluster_name: test_cluster
     greengage_master_group: greengage_master
