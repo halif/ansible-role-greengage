@@ -7,7 +7,7 @@
 
 - name: Create Greengage initialization configuration
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/gpinitsystem_config.j2"
+    src: gpinitsystem_config.j2
     dest: "{{ greengage_gpinitsystem_config }}"
     owner: "{{ greengage_gpadmin_user }}"
     group: "{{ greengage_gpadmin_group }}"
@@ -16,7 +16,7 @@
 
 - name: Create Greengage initialization hostfile
   ansible.builtin.template:
-    src: "{{ role_path }}/templates/gpinitsystem_hostfile.j2"
+    src: gpinitsystem_hostfile.j2
     dest: "{{ greengage_gpinitsystem_hostfile }}"
     owner: "{{ greengage_gpadmin_user }}"
     group: "{{ greengage_gpadmin_group }}"

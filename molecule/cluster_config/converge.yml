@@ -52,6 +52,6 @@
     greengage_master_data_directory: /data/greengage/test_master
     greengage_segment_data_directory: /data/greengage/primary
 
-  tasks:
-    - name: Configure Greengage cluster initialization
-      ansible.builtin.import_tasks: ../../tasks/cluster_config.yml
+  roles:
+    - role: halif.greengage
+      tasks_from: cluster_config.yml
