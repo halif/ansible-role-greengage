@@ -1,0 +1,3 @@
+{% for host in groups[greengage_segments_group] %}
+{{ hostvars[host].ansible_host | default(host) }}
+{% endfor %}

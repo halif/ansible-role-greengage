@@ -40,6 +40,7 @@ greengage_cluster_enabled: false
 
 # Greengage initialization configuration
 greengage_gpinitsystem_config: /home/gpadmin/gpinitsystem_config
+greengage_gpinitsystem_hostfile: /home/gpadmin/hostfile_gpinitsystem
 greengage_master_hostname: "{{ ansible_facts.hostname }}"
 greengage_master_port: 5432
 greengage_segment_count: 1

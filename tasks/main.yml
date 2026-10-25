@@ -28,4 +28,7 @@
 
 - name: Configure Greengage cluster initialization
   ansible.builtin.import_tasks: cluster_config.yml
-  when: greengage_manage_cluster_initialization
+  when:
+    - greengage_manage_cluster_initialization | bool
+    - greengage_cluster_enabled | bool
+    - inventory_hostname == groups[greengage_master_group][0]
