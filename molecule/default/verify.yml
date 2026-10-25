@@ -130,3 +130,14 @@
           - greengage_data_dir.stat.pw_name == 'gpadmin'
           - greengage_data_dir.stat.gr_name == 'gpadmin'
         fail_msg: "Greengage data directory is missing or has incorrect ownership"
+
+    - name: Check Greengage initialization configuration is absent by default
+      ansible.builtin.stat:
+        path: /home/gpadmin/gpinitsystem_config
+      register: greengage_init_config
+
+    - name: Verify cluster initialization is not configured by default
+      ansible.builtin.assert:
+        that:
+          - not greengage_init_config.stat.exists
+        fail_msg: "Cluster initialization configuration must not exist when initialization is disabled."
