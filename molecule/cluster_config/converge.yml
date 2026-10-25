@@ -30,6 +30,7 @@
         groups:
           - greengage_segments
         ansible_connection: local
+      changed_when: false
 
 - name: Generate Greengage cluster configuration
   hosts: greengage_master
