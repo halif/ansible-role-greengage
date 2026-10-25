@@ -39,8 +39,18 @@
   vars:
     greengage_cluster_enabled: true
     greengage_cluster_name: test_cluster
+    greengage_master_group: greengage_master
+    greengage_segments_group: greengage_segments
+    greengage_segment_count: 1
+    greengage_replication_mode: mirrorless
+    greengage_gpadmin_user: gpadmin
+    greengage_gpadmin_group: gpadmin
+    greengage_gpinitsystem_config: /home/gpadmin/gpinitsystem_config
+    greengage_gpinitsystem_hostfile: /home/gpadmin/hostfile_gpinitsystem
+    greengage_master_hostname: "{{ ansible_facts.hostname }}"
     greengage_master_port: 5433
     greengage_master_data_directory: /data/greengage/test_master
+    greengage_segment_data_directory: /data/greengage/primary
 
   tasks:
     - name: Configure Greengage cluster initialization
