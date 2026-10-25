@@ -26,9 +26,9 @@
     - name: Verify master and primary segment configuration
       ansible.builtin.assert:
         that:
-          - "'MASTER_PORT=5432' in (gpinitsystem_config_content.content | b64decode)"
-          - "'MASTER_DIRECTORY=\"/data/greengage/master\"' in (gpinitsystem_config_content.content | b64decode)"
-          - "'ARRAY_NAME=\"greengage\"' in (gpinitsystem_config_content.content | b64decode)"
+          - "'MASTER_PORT=5433' in (gpinitsystem_config_content.content | b64decode)"
+          - "'MASTER_DIRECTORY=\"/data/greengage/test_master\"' in (gpinitsystem_config_content.content | b64decode)"
+          - "'ARRAY_NAME=\"test_cluster\"' in (gpinitsystem_config_content.content | b64decode)"
           - "'declare -a DATA_DIRECTORY=( /data/greengage/primary )' in (gpinitsystem_config_content.content | b64decode)"
           - "'MIRROR_DATA_DIRECTORY' not in (gpinitsystem_config_content.content | b64decode)"
           - "'MASTER_HOSTNAME=\"{{ ansible_facts.hostname }}\"' in (gpinitsystem_config_content.content | b64decode)"

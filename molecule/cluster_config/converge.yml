@@ -5,6 +5,9 @@
 
   vars:
     greengage_manage_cluster_initialization: true
+    greengage_cluster_name: test_cluster
+    greengage_master_port: 5433
+    greengage_master_data_directory: /data/greengage/test_master
 
   roles:
     - role: halif.greengage
