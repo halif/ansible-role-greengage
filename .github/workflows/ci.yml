@@ -166,23 +166,24 @@ jobs:
             exit 1
           fi
 
-      - name: Reject unsupported replication mode
+      - name: Reject inventory without master group
         shell: bash
         run: |
           set +e
           output=$(ansible-playbook molecule/cluster_validation/validate.yml \
-            --extra-vars '{"greengage_replication_mode": "sync"}' 2>&1)
+            --extra-vars '{"greengage_test_inventory": false}' \
+            --extra-vars '{"greengage_cluster_enabled": true}' 2>&1)
           result=$?
           set -e
 
           echo "$output"
 
           if [ "$result" -eq 0 ]; then
-            echo "ERROR: unsupported replication mode was unexpectedly accepted"
+            echo "ERROR: inventory without master group was unexpectedly accepted"
             exit 1
           fi
 
-          if [[ "$output" != *"one primary segment without mirrors"* ]]; then
+          if [[ "$output" != *"greengage_master"* ]]; then
             echo "ERROR: Ansible failed for an unexpected reason"
             exit 1
           fi

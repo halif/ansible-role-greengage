@@ -1,4 +1,4 @@
-﻿---
+---
 - name: Validate Greengage cluster parameters
   hosts: localhost
   connection: local
@@ -7,7 +7,26 @@
   vars:
     greengage_segment_count: 1
     greengage_replication_mode: mirrorless
+    greengage_master_group: greengage_master
+    greengage_segments_group: greengage_segments
+    greengage_test_inventory: true
 
   tasks:
     - name: Validate Greengage cluster configuration
       ansible.builtin.import_tasks: ../../tasks/validate_cluster_config.yml
+
+    - name: Add test Greengage master to inventory
+      ansible.builtin.add_host:
+        name: test-greengage-master
+        groups: greengage_master
+      when: greengage_test_inventory | bool
+
+    - name: Add test Greengage segment to inventory
+      ansible.builtin.add_host:
+        name: test-greengage-segment-1
+        groups: greengage_segments
+      when: greengage_test_inventory | bool
+
+    - name: Validate test Greengage inventory
+      ansible.builtin.import_tasks: ../../tasks/validate_inventory.yml
+      when: greengage_cluster_enabled | default(true) | bool
