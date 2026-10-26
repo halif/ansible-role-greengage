@@ -32,6 +32,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible-core ansible-lint yamllint
 
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/ansible.posix.git,2.0.0
+
       - name: Run yamllint
         run: yamllint -c .config/yamllint.yml .
 
