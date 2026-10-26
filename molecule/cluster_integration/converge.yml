@@ -46,15 +46,6 @@
       when: sshd_process.rc != 0
       changed_when: true
 
-    - name: Add cluster hosts to /etc/hosts
-      ansible.builtin.lineinfile:
-        path: /etc/hosts
-        regexp: ".*\\s{{ item }}(\\s|$)"
-        line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}"
-        state: present
-      loop: "{{ groups['greengage_master'] + groups['greengage_segments'] }}"
-
-
 - name: Install Greengage and generate cluster configuration
   hosts: all
   become: true
