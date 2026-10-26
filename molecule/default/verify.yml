@@ -47,6 +47,26 @@
           - greengage_environment_script.stat.exists
           - greengage_environment_script.stat.isreg
 
+    - name: Check Greengage environment setup for gpadmin
+      ansible.builtin.command:
+        argv:
+          - grep
+          - -F
+          - -x
+          - "source /opt/greengagedb/greengage6/greengage_path.sh"
+          - /home/gpadmin/.bashrc
+      register: gpadmin_environment_source
+      changed_when: false
+      failed_when: false
+
+    - name: Verify Greengage environment setup for gpadmin
+      ansible.builtin.assert:
+        that:
+          - gpadmin_environment_source.rc == 0
+        fail_msg: >-
+          Greengage environment script is not sourced
+          from /home/gpadmin/.bashrc
+
     - name: Check gpadmin account
       ansible.builtin.command:
         argv:
