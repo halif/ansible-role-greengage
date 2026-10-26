@@ -137,6 +137,10 @@
           - ssh
           - -o
           - ConnectTimeout=10
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - UserKnownHostsFile=/dev/null
           - gpadmin@sdw1
           - hostname
       become: true
