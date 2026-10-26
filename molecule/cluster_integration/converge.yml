@@ -101,6 +101,7 @@
           - /home/gpadmin/.ssh/id_ed25519
       args:
         creates: /home/gpadmin/.ssh/id_ed25519
+      become: true
       become_user: gpadmin
 
     - name: Read gpadmin public key
@@ -147,6 +148,7 @@
           - ConnectTimeout=10
           - gpadmin@sdw1
           - hostname
+      become: true
       become_user: gpadmin
       register: segment_ssh
       changed_when: false
