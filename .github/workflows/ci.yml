@@ -122,6 +122,43 @@ jobs:
       - name: Run cluster configuration scenario
         run: molecule test --scenario-name cluster_config
 
+  cluster-integration:
+    name: Molecule - Cluster integration preparation
+    runs-on: ubuntu-22.04
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Molecule
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core molecule
+          pip install "molecule-plugins[docker]"
+
+      - name: Install Ansible collections
+        run: |
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.library_inventory_filtering.git,1.1.5
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/community.docker.git,5.4.0
+          ansible-galaxy collection install \
+            git+https://github.com/ansible-collections/ansible.posix.git,2.0.0
+
+      - name: Make role available to Ansible
+        run: |
+          mkdir -p ~/.ansible/roles/halif
+          ln -s "$GITHUB_WORKSPACE" ~/.ansible/roles/halif/greengage
+
+      - name: Run cluster integration preparation
+        run: molecule test --scenario-name cluster_integration
+
   cluster-validation:
     name: Validate cluster parameters
     runs-on: ubuntu-22.04

@@ -1,0 +1,50 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: mdw
+    hostname: mdw
+    groups:
+      - greengage_master
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /bin/bash -c "while true; do sleep 3600; done"
+    docker_networks:
+      - name: greengage-cluster-integration
+
+  - name: sdw1
+    hostname: sdw1
+    groups:
+      - greengage_segments
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    pre_build_image: true
+    privileged: true
+    command: /bin/bash -c "while true; do sleep 3600; done"
+    docker_networks:
+      - name: greengage-cluster-integration
+
+provisioner:
+  name: ansible
+
+  inventory:
+    host_vars:
+      mdw:
+        ansible_user: root
+        ansible_become: false
+
+      sdw1:
+        ansible_user: root
+        ansible_become: false
+
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      remote_tmp: /tmp
+
+verifier:
+  name: ansible
