@@ -194,17 +194,27 @@
         mode: "0700"
       when: inventory_hostname in groups['greengage_segments']
 
-
 - name: Validate Greengage initialization prerequisites
   hosts: greengage_master
   become: true
 
   tasks:
+    - name: Create temporary configuration for preflight
+      ansible.builtin.copy:
+        src: /home/gpadmin/gpinitsystem_config
+        dest: /tmp/gpinitsystem_config_preflight
+        remote_src: true
+        owner: gpadmin
+        group: gpadmin
+        mode: "0600"
+      tags:
+        - molecule-idempotence-notest
+
     - name: Run gpinitsystem preflight and decline initialization
       ansible.builtin.expect:
         command: >-
           /bin/bash -lc 'source /opt/greengagedb/greengage6/greengage_path.sh &&
-          gpinitsystem -c /home/gpadmin/gpinitsystem_config
+          gpinitsystem -c /tmp/gpinitsystem_config_preflight
           -h /home/gpadmin/hostfile_gpinitsystem'
         responses:
           'Continue with Greengage creation': 'n'
@@ -214,6 +224,8 @@
       register: greengage_preflight
       changed_when: false
       failed_when: false
+      tags:
+        - molecule-idempotence-notest
 
     - name: Show gpinitsystem preflight diagnostics
       ansible.builtin.debug:
@@ -221,6 +233,8 @@
           - "Return code: {{ greengage_preflight.rc | default('unknown') }}"
           - "Standard output: {{ greengage_preflight.stdout | default('') }}"
           - "Standard error: {{ greengage_preflight.stderr | default('') }}"
+      tags:
+        - molecule-idempotence-notest
 
     - name: Verify gpinitsystem reached the confirmation prompt
       ansible.builtin.assert:
@@ -230,3 +244,5 @@
         fail_msg: >-
           gpinitsystem did not reach its confirmation prompt.
           Review the task output to identify the failed prerequisite.
+      tags:
+        - molecule-idempotence-notest
