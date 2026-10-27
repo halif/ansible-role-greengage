@@ -43,11 +43,9 @@ provisioner:
     host_vars:
       mdw:
         ansible_user: root
-        ansible_become: false
 
       sdw1:
         ansible_user: root
-        ansible_become: false
 
   config_options:
     defaults:
