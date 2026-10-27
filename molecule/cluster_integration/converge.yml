@@ -215,6 +215,13 @@
       changed_when: false
       failed_when: false
 
+    - name: Show gpinitsystem preflight diagnostics
+      ansible.builtin.debug:
+        msg:
+          - "Return code: {{ greengage_preflight.rc | default('unknown') }}"
+          - "Standard output: {{ greengage_preflight.stdout | default('') }}"
+          - "Standard error: {{ greengage_preflight.stderr | default('') }}"
+    
     - name: Verify gpinitsystem reached the confirmation prompt
       ansible.builtin.assert:
         that:
