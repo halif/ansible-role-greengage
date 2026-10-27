@@ -1,0 +1,67 @@
+---
+- name: Verify Greengage cluster preparation
+  hosts: greengage_master
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check Greengage initialization configuration
+      ansible.builtin.stat:
+        path: /home/gpadmin/gpinitsystem_config
+      register: greengage_init_config
+
+    - name: Verify initialization configuration file
+      ansible.builtin.assert:
+        that:
+          - greengage_init_config.stat.exists
+          - greengage_init_config.stat.isreg
+          - greengage_init_config.stat.pw_name == 'gpadmin'
+          - greengage_init_config.stat.gr_name == 'gpadmin'
+          - greengage_init_config.stat.mode == '0600'
+        fail_msg: >-
+          Greengage initialization configuration is missing,
+          has incorrect ownership, or has incorrect permissions.
+
+    - name: Check Greengage host file
+      ansible.builtin.stat:
+        path: /home/gpadmin/hostfile_gpinitsystem
+      register: greengage_hostfile
+
+    - name: Verify Greengage host file
+      ansible.builtin.assert:
+        that:
+          - greengage_hostfile.stat.exists
+          - greengage_hostfile.stat.isreg
+          - greengage_hostfile.stat.pw_name == 'gpadmin'
+          - greengage_hostfile.stat.gr_name == 'gpadmin'
+          - greengage_hostfile.stat.mode == '0600'
+        fail_msg: >-
+          Greengage host file is missing,
+          has incorrect ownership, or has incorrect permissions.
+
+    - name: Read Greengage initialization configuration
+      ansible.builtin.slurp:
+        src: /home/gpadmin/gpinitsystem_config
+      register: greengage_config_content
+
+    - name: Read Greengage host file
+      ansible.builtin.slurp:
+        src: /home/gpadmin/hostfile_gpinitsystem
+      register: greengage_hostfile_content
+
+    - name: Verify master and data directories in configuration
+      ansible.builtin.assert:
+        that:
+          - "'mdw' in (greengage_config_content.content | b64decode)"
+          - "'/data/greengage/master' in (greengage_config_content.content | b64decode)"
+          - "'/data/greengage/primary' in (greengage_config_content.content | b64decode)"
+        fail_msg: >-
+          Greengage initialization configuration does not contain
+          the expected master hostname or data directories.
+
+    - name: Verify segment host in host file
+      ansible.builtin.assert:
+        that:
+          - "'sdw1' in (greengage_hostfile_content.content | b64decode)"
+        fail_msg: >-
+          Greengage host file does not contain the expected segment host sdw1.

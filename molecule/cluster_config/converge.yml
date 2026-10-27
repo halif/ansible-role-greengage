@@ -1,13 +1,59 @@
 ---
-- name: Configure Greengage cluster initialization settings
-  hosts: all
+- name: Prepare test environment for Greengage cluster configuration
+  hosts: greengage_master
   become: true
+  gather_facts: true
+
+  tasks:
+    - name: Create gpadmin group
+      ansible.builtin.group:
+        name: gpadmin
+        state: present
+
+    - name: Create gpadmin user
+      ansible.builtin.user:
+        name: gpadmin
+        group: gpadmin
+        home: /home/gpadmin
+        create_home: true
+        state: present
+
+- name: Add test Greengage segment to inventory
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Add test segment host
+      ansible.builtin.add_host:
+        name: test-greengage-segment-1
+        groups:
+          - greengage_segments
+        ansible_connection: local
+      changed_when: false
+
+- name: Generate Greengage cluster configuration
+  hosts: greengage_master
+  become: true
+  gather_facts: true
 
   vars:
     greengage_manage_cluster_initialization: true
+    greengage_cluster_enabled: true
     greengage_cluster_name: test_cluster
+    greengage_master_group: greengage_master
+    greengage_segments_group: greengage_segments
+    greengage_segment_count: 1
+    greengage_replication_mode: mirrorless
+    greengage_gpadmin_user: gpadmin
+    greengage_gpadmin_group: gpadmin
+    greengage_gpinitsystem_config: /home/gpadmin/gpinitsystem_config
+    greengage_gpinitsystem_hostfile: /home/gpadmin/hostfile_gpinitsystem
+    greengage_master_hostname: "{{ ansible_facts.hostname }}"
     greengage_master_port: 5433
     greengage_master_data_directory: /data/greengage/test_master
+    greengage_segment_data_directory: /data/greengage/primary
 
   roles:
     - role: halif.greengage
+      tasks_from: cluster_config.yml

@@ -1,0 +1,248 @@
+---
+- name: Prepare hosts for Greengage integration test
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Install SSH server and client
+      ansible.builtin.apt:
+        name:
+          - openssh-server
+          - openssh-client
+          - rsync
+          - python3-pexpect
+        state: present
+        update_cache: true
+
+    - name: Create SSH runtime directory
+      ansible.builtin.file:
+        path: /run/sshd
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Generate SSH host keys
+      ansible.builtin.command:
+        argv:
+          - ssh-keygen
+          - -A
+      changed_when: false
+
+    - name: Check whether SSH daemon is running
+      ansible.builtin.command:
+        argv:
+          - pgrep
+          - -x
+          - sshd
+      register: sshd_process
+      changed_when: false
+      failed_when: false
+
+    - name: Start SSH daemon
+      ansible.builtin.command:
+        argv:
+          - /usr/sbin/sshd
+      when: sshd_process.rc != 0
+      changed_when: true
+
+
+- name: Install Greengage and generate cluster configuration
+  hosts: all
+  become: true
+
+  vars:
+    greengage_cluster_enabled: true
+    greengage_manage_cluster_initialization: true
+    greengage_cluster_name: molecule_integration
+    greengage_master_group: greengage_master
+    greengage_segments_group: greengage_segments
+    greengage_segment_count: 1
+    greengage_replication_mode: mirrorless
+    greengage_master_hostname: mdw
+    greengage_master_port: 5432
+    greengage_master_data_directory: /data/greengage/master
+    greengage_segment_data_directory: /data/greengage/primary
+
+  roles:
+    - role: halif.greengage
+
+
+- name: Generate SSH key for gpadmin on master
+  hosts: greengage_master
+  become: true
+
+  tasks:
+    - name: Create gpadmin SSH directory
+      ansible.builtin.file:
+        path: /home/gpadmin/.ssh
+        state: directory
+        owner: gpadmin
+        group: gpadmin
+        mode: "0700"
+
+    - name: Generate gpadmin SSH key
+      ansible.builtin.command:
+        argv:
+          - ssh-keygen
+          - -t
+          - ed25519
+          - -N
+          - ""
+          - -f
+          - /home/gpadmin/.ssh/id_ed25519
+      args:
+        creates: /home/gpadmin/.ssh/id_ed25519
+      become: true
+      become_user: gpadmin
+
+    - name: Read gpadmin public key
+      ansible.builtin.slurp:
+        src: /home/gpadmin/.ssh/id_ed25519.pub
+      register: gpadmin_public_key
+
+
+- name: Configure passwordless SSH for gpadmin
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create gpadmin SSH directory
+      ansible.builtin.file:
+        path: /home/gpadmin/.ssh
+        state: directory
+        owner: gpadmin
+        group: gpadmin
+        mode: "0700"
+
+    - name: Install master public key for gpadmin
+      ansible.builtin.copy:
+        dest: /home/gpadmin/.ssh/authorized_keys
+        content: "{{ hostvars[groups['greengage_master'][0]].gpadmin_public_key.content | b64decode }}"
+        owner: gpadmin
+        group: gpadmin
+        mode: "0600"
+
+    - name: Configure SSH for the integration test
+      ansible.builtin.copy:
+        dest: /home/gpadmin/.ssh/config
+        content: |
+          Host *
+              BatchMode yes
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              LogLevel ERROR
+        owner: gpadmin
+        group: gpadmin
+        mode: "0600"
+
+
+- name: Verify passwordless SSH from master
+  hosts: greengage_master
+  become: true
+
+  tasks:
+    - name: Connect to segment as gpadmin
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -i
+          - /home/gpadmin/.ssh/id_ed25519
+          - -o
+          - IdentitiesOnly=yes
+          - -o
+          - ConnectTimeout=10
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - UserKnownHostsFile=/dev/null
+          - gpadmin@sdw1
+          - hostname
+      become: true
+      become_user: gpadmin
+      register: segment_ssh
+      changed_when: false
+
+    - name: Verify segment hostname
+      ansible.builtin.assert:
+        that:
+          - segment_ssh.rc == 0
+          - segment_ssh.stdout | trim == 'sdw1'
+        fail_msg: "Passwordless SSH from mdw to sdw1 failed."
+
+- name: Prepare data directories for initialization preflight
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Create master data directory
+      ansible.builtin.file:
+        path: /data/greengage/master
+        state: directory
+        owner: gpadmin
+        group: gpadmin
+        mode: "0700"
+      when: inventory_hostname in groups['greengage_master']
+
+    - name: Create primary segment data directory
+      ansible.builtin.file:
+        path: /data/greengage/primary
+        state: directory
+        owner: gpadmin
+        group: gpadmin
+        mode: "0700"
+      when: inventory_hostname in groups['greengage_segments']
+
+- name: Validate Greengage initialization prerequisites
+  hosts: greengage_master
+  become: true
+
+  tasks:
+    - name: Create temporary configuration for preflight
+      ansible.builtin.copy:
+        src: /home/gpadmin/gpinitsystem_config
+        dest: /tmp/gpinitsystem_config_preflight
+        remote_src: true
+        owner: gpadmin
+        group: gpadmin
+        mode: "0600"
+      tags:
+        - molecule-idempotence-notest
+
+    - name: Run gpinitsystem preflight and decline initialization
+      ansible.builtin.expect:
+        command: >-
+          /bin/bash -lc 'source /opt/greengagedb/greengage6/greengage_path.sh &&
+          gpinitsystem -c /tmp/gpinitsystem_config_preflight
+          -h /home/gpadmin/hostfile_gpinitsystem'
+        responses:
+          'Continue with Greengage creation': 'n'
+        timeout: 180
+      become: true
+      become_user: gpadmin
+      register: greengage_preflight
+      changed_when: false
+      failed_when: false
+      tags:
+        - molecule-idempotence-notest
+
+    - name: Show gpinitsystem preflight diagnostics
+      ansible.builtin.debug:
+        msg:
+          - "Return code: {{ greengage_preflight.rc | default('unknown') }}"
+          - "Standard output: {{ greengage_preflight.stdout | default('') }}"
+          - "Standard error: {{ greengage_preflight.stderr | default('') }}"
+      tags:
+        - molecule-idempotence-notest
+
+    - name: Verify gpinitsystem reached the confirmation prompt
+      ansible.builtin.assert:
+        that:
+          - "'Continue with Greengage creation' in greengage_preflight.stdout"
+          - "'User abort requested' in greengage_preflight.stdout"
+        fail_msg: >-
+          gpinitsystem did not reach its confirmation prompt.
+          Review the task output to identify the failed prerequisite.
+      tags:
+        - molecule-idempotence-notest

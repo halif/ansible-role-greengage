@@ -38,3 +38,29 @@
           - "'TRUSTED_SHELL=ssh' in (gpinitsystem_config_content.content | b64decode)"
           - "'CHECK_POINT_SEGMENTS=8' in (gpinitsystem_config_content.content | b64decode)"
         fail_msg: "The generated configuration does not match the single-segment mirrorless setup."
+
+
+    - name: Check gpinitsystem hostfile
+      ansible.builtin.stat:
+        path: /home/gpadmin/hostfile_gpinitsystem
+      register: gpinitsystem_hostfile
+
+    - name: Verify gpinitsystem hostfile
+      ansible.builtin.assert:
+        that:
+          - gpinitsystem_hostfile.stat.exists
+          - gpinitsystem_hostfile.stat.isreg
+          - gpinitsystem_hostfile.stat.pw_name == 'gpadmin'
+          - gpinitsystem_hostfile.stat.gr_name == 'gpadmin'
+          - gpinitsystem_hostfile.stat.mode == '0600'
+
+    - name: Read gpinitsystem hostfile
+      ansible.builtin.slurp:
+        src: /home/gpadmin/hostfile_gpinitsystem
+      register: gpinitsystem_hostfile_content
+
+    - name: Verify segment hostfile
+      ansible.builtin.assert:
+        that:
+          - "'test-greengage-segment-1' in (gpinitsystem_hostfile_content.content | b64decode)"
+        fail_msg: "The generated hostfile does not contain the expected segment host."

@@ -1,10 +1,14 @@
----
+﻿---
 - name: Validate supported operating system
   ansible.builtin.assert:
     that:
       - ansible_facts.distribution == "Ubuntu"
       - ansible_facts.distribution_version == "22.04"
     fail_msg: "This role currently supports Ubuntu 22.04 only."
+
+- name: Validate Greengage cluster inventory
+  ansible.builtin.import_tasks: validate_inventory.yml
+  when: greengage_cluster_enabled | bool
 
 - name: Install prerequisites
   ansible.builtin.import_tasks: prerequisites.yml
@@ -24,4 +28,7 @@
 
 - name: Configure Greengage cluster initialization
   ansible.builtin.import_tasks: cluster_config.yml
-  when: greengage_manage_cluster_initialization
+  when:
+    - greengage_manage_cluster_initialization | bool
+    - greengage_cluster_enabled | bool
+    - inventory_hostname == groups[greengage_master_group][0]

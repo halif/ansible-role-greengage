@@ -36,10 +36,16 @@ greengage_cluster_name: "greengage"
 greengage_master_data_directory: "/data/greengage/master"
 greengage_segment_data_directory: "/data/greengage/primary"
 greengage_mirror_data_directory: "/data/greengage/mirror"
+greengage_cluster_enabled: false
 
 # Greengage initialization configuration
 greengage_gpinitsystem_config: /home/gpadmin/gpinitsystem_config
+greengage_gpinitsystem_hostfile: /home/gpadmin/hostfile_gpinitsystem
 greengage_master_hostname: "{{ ansible_facts.hostname }}"
 greengage_master_port: 5432
 greengage_segment_count: 1
 greengage_replication_mode: "mirrorless"
+
+# Greengage inventory
+greengage_master_group: greengage_master
+greengage_segments_group: greengage_segments
