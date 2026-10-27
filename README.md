@@ -3,71 +3,63 @@
 [![Tested with Molecule](https://img.shields.io/badge/tested%20with-Molecule-2ea44f?logo=ansible&logoColor=white)](https://ansible.readthedocs.io/projects/molecule/)
 [![Linted with ansible-lint](https://img.shields.io/badge/linted%20with-ansible--lint-1a1918?logo=ansible&logoColor=white)](https://ansible.readthedocs.io/projects/lint/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ansible Galaxy](https://img.shields.io/badge/halif.greengage-blue?logo=ansible&logoColor=white)](https://galaxy.ansible.com/ui/standalone/roles/halif/greengage/)
 
 Ansible role for installing and configuring Greengage DB on Ubuntu 22.04 LTS.
 
-The role prepares the operating system, installs Greengage DB, configures the `gpadmin` account and environment, and can generate cluster initialization configuration files.
+The role installs Greengage DB, configures the `gpadmin` account and environment, prepares data directories, and optionally generates cluster initialization configuration files.
 
-**Important:** this role does not automatically initialize or start a database cluster. Cluster initialization is an explicit operational step performed by the administrator.
-
-## Status and scope
-
-This is an initial release focused on installation and cluster preparation.
-
-| Feature | Status |
-|---|---|
-| Install Greengage DB package | Covered by Molecule tests |
-| Configure APT repository and prerequisites | Covered by role tests |
-| Create the `gpadmin` user and group | Covered by Molecule tests |
-| Configure the Greengage environment | Covered by Molecule tests |
-| Create the Greengage data directory | Covered by Molecule tests |
-| Generate cluster initialization configuration | Covered by Molecule tests |
-| Validate supported cluster settings | Covered by validation tests |
-| Prepare two test nodes and configure passwordless SSH | Covered by the CI integration-preparation scenario |
-| Initialize a real Greengage cluster | Not yet verified by CI |
-| Verify cluster health using `gpstate` | Not yet verified by CI |
-| Verify SQL connectivity using `psql` | Not yet verified by CI |
-
-Passing CI confirms the behaviors listed as covered above. It does not yet establish that a fully initialized, operational Greengage cluster can be created successfully.
+**Important:** cluster initialization is not performed automatically. The administrator remains responsible for reviewing the generated configuration and deciding when to initialize and start a cluster.
 
 ## Requirements
 
 - Ubuntu 22.04 LTS (Jammy).
 - Ansible 2.14 or later.
 - Network access to the Greengage DB APT repository.
-- Sufficient privileges to install system packages and manage users, groups, files, and directories.
+- Privileges required to install packages and manage users, groups, and directories.
 
-Other Ubuntu versions and operating systems are not currently supported by this role.
+Other operating systems and Ubuntu versions are not currently supported by this role.
 
-## What the role does
+## Role behavior
 
-By default, the role:
+The role can perform the following tasks:
 
-- Installs required APT prerequisites.
-- Configures the Greengage DB APT repository and signing key.
-- Installs the configured Greengage DB package.
-- Creates the `gpadmin` group and user when enabled.
-- Configures the Greengage environment for `gpadmin`.
-- Creates the configured Greengage data directory.
-- Leaves cluster initialization disabled.
+- Install required APT prerequisites.
+- Configure the Greengage DB APT repository and signing key.
+- Install the Greengage DB package.
+- Create the `gpadmin` user and group when enabled.
+- Configure the Greengage environment for `gpadmin`.
+- Create the configured Greengage data directory.
+- Validate cluster inventory and supported settings when cluster configuration is enabled.
+- Generate `gpinitsystem_config` and the host file used for cluster initialization when explicitly enabled.
 
-When explicitly enabled, the role can also generate `gpinitsystem_config` and the host file used for cluster initialization.
+### Cluster configuration limitations
 
-### What the role does not do
+The current implementation supports the following cluster configuration:
 
-The role does not automatically:
+- One master host.
+- At least one segment host in the inventory.
+- One primary segment without mirrors.
+- The `mirrorless` replication mode.
 
-- Initialize a Greengage cluster with `gpinitsystem`.
-- Start a newly initialized cluster.
-- Create application databases or users.
-- Configure mirrored segments.
-- Guarantee that the resulting cluster is operational or accepts SQL connections.
+Unsupported segment counts and replication modes are rejected by validation.
 
-These steps must be performed separately by the administrator.
+Cluster configuration generation is disabled by default. Generating initialization files does not initialize or start a cluster.
+
+### What is not yet verified
+
+The current CI suite does not perform a complete cluster initialization. In particular, it does not yet verify:
+
+- Successful execution of `gpinitsystem` through completion.
+- Successful startup of a fully initialized cluster.
+- Cluster health using `gpstate`.
+- SQL connectivity using `psql`.
+
+The integration-preparation scenario runs `gpinitsystem` only far enough to verify that its preliminary checks reach the confirmation prompt. It then declines initialization. This checks preparation for initialization, not the successful creation of a working cluster.
 
 ## Installation
 
-After the role is available on Ansible Galaxy:
+Install the role from Ansible Galaxy:
 
 ```bash
 ansible-galaxy role install halif.greengage
@@ -81,7 +73,7 @@ ansible-galaxy role install git+https://github.com/halif/ansible-role-greengage.
 
 ## Basic usage
 
-The following playbook installs and configures Greengage DB without initializing a cluster:
+The following playbook installs and configures Greengage DB without enabling cluster configuration or initializing a cluster.
 
 ```yaml
 ---
@@ -93,20 +85,16 @@ The following playbook installs and configures Greengage DB without initializing
     - role: halif.greengage
 ```
 
-Use an inventory containing the intended Greengage servers.
+Replace `greengage_servers` with the appropriate inventory group in your environment.
 
 ## Cluster configuration
 
-Cluster configuration generation is disabled by default.
-
-To enable it, both of the following variables must be enabled:
+Cluster configuration generation requires both of the following variables:
 
 - `greengage_cluster_enabled: true`
 - `greengage_manage_cluster_initialization: true`
 
-The inventory must contain the configured master group with exactly one host and a segment group with at least one host.
-
-The current supported configuration is limited to one primary segment without mirrors. Unsupported segment counts and replication modes are rejected by validation.
+The inventory must contain exactly one host in the configured master group and at least one host in the configured segment group.
 
 ### Example inventory
 
@@ -118,13 +106,13 @@ mdw
 sdw1
 ```
 
-The names `mdw` and `sdw1` are examples. They must correspond to hosts that are resolvable and reachable in your environment.
+The hostnames `mdw` and `sdw1` are examples. They must resolve correctly and refer to reachable hosts in your environment.
 
-### Example playbook
+Install and configure Greengage DB on the intended hosts first. Then run the following playbook against the master to generate the cluster initialization configuration:
 
 ```yaml
 ---
-- name: Prepare Greengage cluster configuration
+- name: Generate Greengage cluster configuration
   hosts: greengage_master
   become: true
 
@@ -148,13 +136,13 @@ The names `mdw` and `sdw1` are examples. They must correspond to hosts that are 
     - role: halif.greengage
 ```
 
-After running the playbook, review the generated initialization configuration and host file before using them.
+Review the generated `gpinitsystem_config` and host file before proceeding.
 
-**Generating these files does not initialize or start the cluster.** Before manual initialization, verify that the master and segment hosts meet Greengage's system, networking, hostname, SSH, and storage requirements.
+**This playbook only prepares the initialization configuration. It does not execute `gpinitsystem` or start the cluster.** Before initializing a real cluster, verify that the hosts satisfy Greengage's requirements for networking, hostname resolution, SSH, storage, and operating system configuration.
 
 ## Configuration variables
 
-The defaults are defined in `defaults/main.yml`.
+The main variables are defined in `defaults/main.yml`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -169,7 +157,7 @@ The defaults are defined in `defaults/main.yml`.
 | `greengage_data_directory` | `/data/greengage` | Base data directory |
 | `greengage_manage_data_directory` | `true` | Manage the base data directory |
 | `greengage_data_directory_mode` | `"0700"` | Permissions for the base data directory |
-| `greengage_cluster_enabled` | `false` | Enable cluster inventory validation and cluster configuration |
+| `greengage_cluster_enabled` | `false` | Enable cluster inventory validation and configuration |
 | `greengage_manage_cluster_initialization` | `false` | Generate cluster initialization configuration |
 | `greengage_cluster_name` | `greengage` | Cluster name used by the configuration template |
 | `greengage_master_group` | `greengage_master` | Inventory group for the master |
@@ -182,11 +170,56 @@ The defaults are defined in `defaults/main.yml`.
 | `greengage_segment_count` | `1` | Supported primary segment count |
 | `greengage_replication_mode` | `mirrorless` | Supported replication mode |
 
-For the complete list of variables and APT settings, see [`defaults/main.yml`](defaults/main.yml).
+For the complete list of variables, see [`defaults/main.yml`](defaults/main.yml).
 
 ## Testing
 
 The repository uses GitHub Actions, `ansible-lint`, `yamllint`, and Molecule.
+
+The current test scenarios cover the following areas.
+
+### Default scenario
+
+The `default` scenario verifies the installation and preparation of Greengage DB, including:
+
+- Package installation.
+- Installation directory and executable files.
+- The `gpadmin` account and home directory.
+- Greengage environment setup.
+- Required initialization and status utilities.
+- The data directory and its ownership.
+- Cluster initialization remaining disabled by default.
+
+### Cluster configuration scenario
+
+The `cluster_config` scenario verifies cluster inventory validation and generation of initialization configuration files with expected values, ownership, and permissions.
+
+### Cluster integration-preparation scenario
+
+The `cluster_integration` scenario prepares two temporary Docker containers representing the master (`mdw`) and a primary segment (`sdw1`).
+
+It verifies:
+
+- Greengage installation and configuration on the test hosts.
+- SSH server preparation and passwordless SSH from the master to the segment.
+- Preparation of the master and segment data directories.
+- Generation and preliminary validation of the Greengage initialization configuration.
+- That `gpinitsystem` reaches its confirmation prompt and that initialization is declined.
+- Idempotence of the role during the Molecule test sequence.
+
+This scenario does **not** complete cluster initialization. It does not verify a running cluster, `gpstate`, or SQL queries.
+
+### Running tests locally
+
+The tests can be run locally if the required Ansible, Molecule, Docker, and collection dependencies are installed:
+
+```bash
+molecule -s default test
+molecule -s cluster_config test
+molecule -s cluster_integration test
+```
+
+The GitHub Actions workflow runs the configured linting and test jobs.
 
 ## Supported platform
 
